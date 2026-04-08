@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - TM Location{% endblock %}
+
+{% block content %}
+<section class="relative min-h-[calc(100vh-160px)] flex items-center justify-center overflow-hidden px-4 pb-32 lg:pb-0">
+    <!-- Background Decor -->
+    <div class="absolute inset-0 z-0">
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-orange-50 rounded-full blur-3xl opacity-50">
+        </div>
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gray-50 rounded-full blur-3xl opacity-30"></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+
+            <!-- Left: Copywriting -->
+            <div class="space-y-8 text-center lg:text-left">
+                <div
+                    class="inline-flex items-center space-x-2 bg-orange-50 text-[#ff6600] px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest animate-fade-in">
+                    <span class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff6600] opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-[#ff6600]"></span>
+                    </span>
+                    <span>Service de location à Madagascar</span>
+                </div>
+
+                <h1 class="text-6xl md:text-8xl font-black text-black leading-[0.9] tracking-tighter">
+                    Roulez avec <br>
+                    <span class="text-[#ff6600]">assurance.</span>
+                </h1>
+
+                <p class="text-xl text-gray-400 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
+                    Découvrez une nouvelle dimension de liberté avec TM Location. Notre flotte exclusive vous attend
+                    pour explorer l'île Rouge.
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                    <a href="/cars"
+                        class="group bg-black text-white px-10 py-5 rounded-2xl font-bold flex items-center space-x-3 hover:bg-[#ff6600] transition-all hover:scale-105 shadow-2xl">
+                        <span>Explorer la flotte</span>
+                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right: Search Form -->
+            <div class="relative group animate-slide-up">
+                <div
+                    class="absolute -inset-1 bg-gradient-to-r from-[#ff6600] to-orange-400 rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition-opacity">
+                </div>
+                <div
+                    class="relative bg-white border border-gray-100 p-8 md:p-12 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.08)] space-y-8">
+                    <div class="space-y-2">
+                        <h2 class="text-3xl font-bold tracking-tight text-black">Prêt à partir ?</h2>
+                        <p class="text-gray-400 font-medium">Configurez votre voyage en quelques secondes.</p>
+                    </div>
+
+                    <form action="/cars" method="GET" class="space-y-6">
+                        <!-- Location Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Lieu
+                                    de Départ</label>
+                                <div class="relative">
+                                    <input type="text" name="departure" placeholder="Ex: Antananarivo"
+                                        class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-[#ff6600] transition-all placeholder:text-gray-300">
+                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" </path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                </path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <label
+                                    class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Destination</label>
+                                <div class="relative">
+                                    <input type="text" name="destination" placeholder="Ex: Mahajanga"
+                                        class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-[#ff6600] transition-all placeholder:text-gray-300">
+                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" <path
+                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2" </path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Date du
+                                voyage</label>
+                            <div class="relative">
+                                <input type="date" name="date"
+                                    class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-[#ff6600] transition-all text-gray-700">
+                                <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 pointer-events-none"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" </path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                            class="w-full bg-[#ff6600] text-white py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all hover:scale-[1.02] active:scale-95">
+                            Lancer la recherche
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<style>
+    @keyframes slide-up {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .animate-slide-up {
+        animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .animate-fade-in {
+        animation: fade-in 1s ease-out forwards;
+    }
+</style>
+{% endblock %}

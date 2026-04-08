@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TM Location{% endblock %} - Location de voitures</title>
+
+    <!--
+    Pourquoi utiliser des CDN ?
+    - Pas besoin d'installer localement
+    - Cache du navigateur (si déjà chargé par un autre site)
+    - Pour la production, on préférera héberger localement
+    -->
+
+    <!-- Tailwind CSS pour le style -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- HTMX pour les interactions dynamiques -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    <!-- Alpine.js pour les interactions JavaScript légères -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Icônes Heroicons (via CDN) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/heroicons@2.0.18/css/heroicons.min.css">
+
+    <style>
+        /* Styles personnalisés */
+            {
+            % block styles %
+        }
+
+            {
+            % endblock %
+        }
+
+        /* Animation pour les transitions HTMX */
+        .htmx-swapping {
+            opacity: 0;
+            transition: opacity 200ms ease-out;
+        }
+
+        .htmx-settling {
+            opacity: 1;
+            transition: opacity 200ms ease-in;
+        }
+
+        /* Indicateur de chargement */
+        .htmx-request .htmx-indicator {
+            display: inline-block;
+        }
+
+        .htmx-indicator {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="bg-white min-h-screen flex flex-col font-sans">
+    <!--
+    STRUCTURE DE LA PAGE
+
+    La page est divisée en 3 parties principales :
+    1. Header : Navigation et logo
+    2. Main : Contenu principal (flex-grow pour occuper l'espace)
+    3. Footer/Nav : Barre de navigation inférieure (mobile-first)
+
+    Cette approche "mobile-first" place la navigation en bas,
+    ce qui est plus ergonomique sur mobile.
+    -->
+
+    <!-- HEADER - Navigation supérieure -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b border-gray-100">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20">
+                <!-- Logo et nom de l'application -->
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-2">
+                        <span class="text-3xl font-black tracking-tighter text-black">TM</span>
+                        <span class="text-3xl font-black tracking-tighter text-[#ff6600]">Location</span>
+                    </a>
+                </div>
+
+                <!-- Navigation pour desktop -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/cars"
+                        class="text-gray-600 hover:text-[#ff6600] px-3 py-2 text-sm font-semibold transition-all">
+                        Nos véhicules
+                    </a>
+                    <a href="/rental-types"
+                        class="text-gray-600 hover:text-[#ff6600] px-3 py-2 text-sm font-semibold transition-all">
+                        Tarifs
+                    </a>
+                    <a href="/contact"
+                        class="text-gray-600 hover:text-[#ff6600] px-3 py-2 text-sm font-semibold transition-all">
+                        Contact
+                    </a>
+                    <!-- Bouton Réserver (action principale) -->
+                    <a href="/booking"
+                        class="bg-black text-white px-6 py-3 rounded-full text-sm font-bold hover:bg-[#ff6600] hover:scale-105 transition-all shadow-lg">
+                        RÉSERVER
+                    </a>
+                </div>
+
+                <!-- Menu hamburger mobile -->
+                <div class="md:hidden flex items-center">
+                    <button x-data="{ open: false }" @click="open = !open" class="text-black hover:text-[#ff6600] p-2">
+                        <!-- Icône hamburger -->
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main class="flex-grow">
+        <!-- Messages flash (notifications) supprimés car non supportés nativement par FastAPI sans middleware dédié -->
+
+        <!-- Contenu spécifique à chaque page -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- BARRE DE NAVIGATION INFÉRIEURE (Mobile) -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 md:hidden z-50">
+        <div class="flex justify-around items-center h-20 px-2 pb-safe">
+            <!-- Accueil -->
+            <a href="/" class="flex flex-col items-center justify-center text-[#ff6600] transition-all">
+                <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span class="text-[10px] font-bold mt-1 uppercase tracking-widest">Accueil</span>
+            </a>
+
+            <!-- Véhicules -->
+            <a href="/rental-types"
+                class="flex flex-col items-center justify-center text-gray-400 hover:text-[#ff6600] transition-all">
+                <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <span class="text-[10px] font-bold mt-1 uppercase tracking-widest">Types</span>
+            </a>
+
+            <!-- Réserver (action centrale) -->
+            <a href="/booking"
+                class="flex flex-col items-center justify-center bg-black text-white rounded-2xl w-14 h-14 -mt-10 shadow-[0_10px_20px_rgba(0,0,0,0.2)] hover:bg-[#ff6600] transition-all border-4 border-white">
+                <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                </svg>
+            </a>
+
+            <!-- Ma Réservation -->
+            <a href="/tracking"
+                class="flex flex-col items-center justify-center text-gray-400 hover:text-[#ff6600] transition-all">
+                <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L16 4m0 13V4m0 0L9 7" />
+                </svg>
+                <span class="text-[10px] font-bold mt-1 uppercase tracking-widest">Tracking</span>
+            </a>
+
+            <!-- Plus/Contact -->
+            <a href="/contact"
+                class="flex flex-col items-center justify-center text-gray-400 hover:text-[#ff6600] transition-all">
+                <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span class="text-[10px] font-bold mt-1 uppercase tracking-widest">Contact</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- FOOTER pour desktop -->
+    <footer class="hidden md:block bg-black text-white py-12 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+                <!-- Brand -->
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl font-black text-white">TM</span>
+                        <span class="text-2xl font-black text-[#ff6600]">LOCATION</span>
+                    </div>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Le leader de la location de voitures à Madagascar. Profitez d'une expérience premium avec notre
+                        flotte de véhicules récents.
+                    </p>
+                </div>
+
+                <!-- Liens -->
+                <div>
+                    <h3 class="text-white font-bold mb-6 uppercase tracking-wider text-xs">Navigation</h3>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li><a href="/cars" class="hover:text-[#ff6600] transition-colors">Notre Flotte</a></li>
+                        <li><a href="/rental-types" class="hover:text-[#ff6600] transition-colors">Nos Tarifs</a></li>
+                        <li><a href="/booking" class="hover:text-[#ff6600] transition-colors">Réservation</a></li>
+                    </ul>
+                </div>
+
+                <!-- Services -->
+                <div>
+                    <h3 class="text-white font-bold mb-6 uppercase tracking-wider text-xs">Services</h3>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li><a href="/tracking" class="hover:text-[#ff6600] transition-colors">Tracking GPS</a></li>
+                        <li><a href="/contact" class="hover:text-[#ff6600] transition-colors">Assistance 24/7</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h3 class="text-white font-bold mb-6 uppercase tracking-wider text-xs">Newsletter</h3>
+                    <div class="flex">
+                        <input type="email" placeholder="Votre email"
+                            class="bg-gray-900 border-none rounded-l-lg px-4 py-2 text-sm w-full focus:ring-1 focus:ring-[#ff6600]">
+                        <button
+                            class="bg-[#ff6600] px-4 py-2 rounded-r-lg font-bold text-sm hover:bg-orange-600 transition-all">OK</button>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="border-t border-gray-900 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-gray-500 text-xs gap-4">
+                <p>&copy; {{ current_year }} TM LOCATION. Tous droits réservés.</p>
+                <div class="flex space-x-6">
+                    <a href="#" class="hover:text-white">Mentions légales</a>
+                    <a href="#" class="hover:text-white">CGV</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts additionnels -->
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>
