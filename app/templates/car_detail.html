@@ -16,73 +16,21 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
         <!-- Colonne Gauche : Image et Galerie -->
         <!--genere moi un code pour afficher les images de la voiture et un carousels avec les fleches pour naviguer entre les images-->
-        <div class="relative">
-            <div class="carousel">
-                <div class="carousel-inner">
-                    {% for image in car.images %}
-                    <div class="carousel-item">
-                        <img src="{{ image }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-full object-cover">
-                    </div>
-                    {% endfor %}
-                </div>
-                <button class="carousel-prev">&#10094;</button>
-                <button class="carousel-next">&#10095;</button>
-            </div>
+        <div class="relative bg-gradient-to-br from-gray-100 to-gray-200 h-96 rounded-2xl overflow-hidden flex items-center justify-center">
+            {% if car.image_url %}
+            <img src="{{ car.image_url }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-full object-cover">
+            {% else %}
+            <span class="text-9xl">{{ car.car_type.icon if car.car_type else '🚗' }}</span>
+            {% endif %}
+        </div>
 
-            <style>
-                .carousel {
-                    position: relative;
-                    overflow: hidden;
-                    width: 100%;
-                    height: 500px;
-                }
 
-                .carousel-inner {
-                    display: flex;
-                    transition: transform 0.5s ease-in-out;
-                }
-
-                .carousel-item {
-                    min-width: 100%;
-                    height: 100%;
-                }
-
-                .carousel-item img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                }
-
-                .carousel-prev,
-                .carousel-next {
-                    position: absolute;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    background-color: rgba(0, 0, 0, 0.5);
-                    color: white;
-                    border: none;
-                    padding: 10px;
-                    cursor: pointer;
-                }
-
-                .carousel-prev {
-                    left: 10px;
-                }
-
-                .carousel-next {
-                    right: 10px;
-                }
-            </style>
 
             <!-- Caractéristiques rapides -->
             <div class="grid grid-cols-3 gap-4">
                 <div class="bg-white p-4 rounded-xl shadow-sm text-center">
                     <span class="block text-2xl mb-1">💺</span>
                     <span class="text-sm font-medium text-gray-700">{{ car.seats }} places</span>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm text-center">
-                    <span class="block text-2xl mb-1">⚙️</span>
-                    <span class="text-sm font-medium text-gray-700 text-capitalize">{{ car.transmission }}</span>
                 </div>
                 <div class="bg-white p-4 rounded-xl shadow-sm text-center">
                     <span class="block text-2xl mb-1">📅</span>

@@ -88,10 +88,11 @@ async def seed_initial_data():
     - Types de location (Journalière, Hebdomadaire, etc.)
     - Quelques voitures de démonstration
     """
+    from datetime import datetime
     from sqlalchemy import select
     from sqlalchemy.ext.asyncio import AsyncSession
     from app.database import AsyncSessionLocal
-    from app.models import CarType, RentalType, Car, get_initial_car_types, get_initial_rental_types, get_initial_cars
+    from app.models import CarType, RentalType, Car, Rental, get_initial_car_types, get_initial_rental_types, get_initial_cars
 
     async with AsyncSessionLocal() as session:
         # Vérifier si les données existent déjà
@@ -121,6 +122,21 @@ async def seed_initial_data():
             session.add(car)
 
         await session.commit()
+
+        # Ajouter une location de démonstration pour le tracking
+        demo_rental = Rental(
+            customer_name="Client Test",
+            customer_phone="0340000000",
+            car_id=1,
+            rental_type_id=1,
+            start_date=datetime.utcnow(),
+            end_date=datetime.utcnow(),
+            total_price=25000.0,
+            status="en_cours"
+        )
+        session.add(demo_rental)
+        await session.commit()
+
         print("✅ Données initiales insérées avec succès !")
 
 
@@ -175,6 +191,11 @@ app.add_middleware(
 # Le premier argument est le chemin URL, le second le dossier
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+# Servir aussi le dossier assets s'il existe
+ASSETS_DIR = Path(__file__).parent / "assets"
+if ASSETS_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
 
 # =============================================================================
 # INCLUSION DES ROUTEURS

@@ -115,7 +115,6 @@ class Car(Base):
     seats: Mapped[int] = mapped_column(Integer, default=5)
 
     # Type de transmission (manuelle/automatique)
-    transmission: Mapped[str] = mapped_column(String(20), default="manuelle")
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -281,7 +280,7 @@ def get_initial_cars() -> list[dict]:
             "daily_price": 25000.0,  # En Ariary (devise malgache)
             "car_type_id": 1,  # Économique
             "seats": 5,
-            "transmission": "manuelle",
+            "image_url": "/assets/Gemini.png",
             "description": "Parfaite pour la ville, économique et fiable."
         },
         {
@@ -292,7 +291,7 @@ def get_initial_cars() -> list[dict]:
             "daily_price": 45000.0,
             "car_type_id": 3,  # SUV
             "seats": 5,
-            "transmission": "manuelle",
+            "image_url": "/assets/Gemini.png",
             "description": "SUV compact idéal pour les routes malgaches."
         },
         {
@@ -303,7 +302,7 @@ def get_initial_cars() -> list[dict]:
             "daily_price": 120000.0,
             "car_type_id": 4,  # Luxe
             "seats": 5,
-            "transmission": "automatique",
+            "image_url": "/assets/Gemini.png",
             "description": "Confort et élégance pour vos occasions spéciales."
         },
     ]

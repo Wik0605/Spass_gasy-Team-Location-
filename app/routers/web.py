@@ -22,12 +22,12 @@ from fastapi import APIRouter, Request, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.orm import selectinload
 from typing import Optional
 
 from app.database import get_db
-from app.models import CarType, Car, RentalType
+from app.models import CarType, Car, RentalType, Rental
 
 # Création du routeur
 # prefix="" : Pas de préfixe pour les routes web
@@ -273,6 +273,55 @@ async def contact_page(request: Request):
     }
 
     return templates.TemplateResponse("contact.html", context)
+ 
+ 
+# =============================================================================
+# PAGE TRACKING
+# =============================================================================
+ 
+@router.get("/tracking", response_class=HTMLResponse)
+async def tracking_page(
+    request: Request,
+    q: Optional[str] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Page de suivi de réservation (Tracking)
+    """
+    rental = None
+    error = None
+ 
+    if q:
+        # Tenter de trouver par ID (si numérique) ou par téléphone
+        try:
+            # On cherche soit par ID exact, soit par numéro de téléphone
+            query = select(Rental).options(
+                selectinload(Rental.car).selectinload(Car.car_type),
+                selectinload(Rental.rental_type)
+            )
+            
+            if q.isdigit():
+                query = query.where(or_(Rental.id == int(q), Rental.customer_phone == q))
+            else:
+                query = query.where(Rental.customer_phone == q)
+                
+            result = await db.execute(query)
+            rental = result.scalar_one_or_none()
+            
+            if not rental:
+                error = "Aucune réservation trouvée pour ce numéro ou identifiant."
+        except Exception as e:
+            error = f"Une erreur est survenue lors de la recherche : {str(e)}"
+ 
+    context = {
+        "request": request,
+        "rental": rental,
+        "search_query": q,
+        "error": error,
+        "current_year": datetime.datetime.now().year,
+    }
+ 
+    return templates.TemplateResponse("tracking.html", context)
 
 
 # =============================================================================

@@ -121,11 +121,6 @@ class CarBase(BaseModel):
         le=9,
         description="Nombre de places"
     )
-    transmission: str = Field(
-        default="manuelle",
-        description="Type de transmission",
-        examples=["manuelle", "automatique"]
-    )
     description: Optional[str] = Field(
         None,
         description="Description optionnelle"
@@ -155,7 +150,7 @@ class CarUpdate(BaseModel):
     daily_price: Optional[float] = Field(None, gt=0)
     car_type_id: Optional[int] = None
     seats: Optional[int] = Field(None, ge=1, le=9)
-    transmission: Optional[str] = None
+   
     description: Optional[str] = None
     image_url: Optional[str] = None
     is_available: Optional[bool] = None
