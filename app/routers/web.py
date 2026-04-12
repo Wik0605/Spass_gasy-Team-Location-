@@ -27,7 +27,7 @@ from sqlalchemy.orm import selectinload
 from typing import Optional
 
 from app.database import get_db
-from app.models import CarType, Car, RentalType, Rental
+from app.models import CarType, Car, RentalType, Rental, City
 
 # Création du routeur
 # prefix="" : Pas de préfixe pour les routes web
@@ -90,6 +90,10 @@ async def home(request: Request, db: AsyncSession = Depends(get_db)):
     )
     available_cars = available_cars_result.scalars().all()
 
+    # Récupérer les villes
+    cities_result = await db.execute(select(City).where(City.is_active == True).order_by(City.name))
+    cities = cities_result.scalars().all()
+
     # Contexte passé au template
     # request est obligatoire pour que les urls fonctionnent
     context = {
@@ -97,6 +101,7 @@ async def home(request: Request, db: AsyncSession = Depends(get_db)):
         "car_types": car_types,
         "rental_types": rental_types,
         "available_cars": available_cars,
+        "cities": cities,
         "current_year": datetime.datetime.now().year,
     }
 

@@ -92,16 +92,24 @@ async def seed_initial_data():
     from sqlalchemy import select
     from sqlalchemy.ext.asyncio import AsyncSession
     from app.database import AsyncSessionLocal
-    from app.models import CarType, RentalType, Car, Rental, get_initial_car_types, get_initial_rental_types, get_initial_cars
+    from app.models import CarType, RentalType, Car, Rental, City, get_initial_car_types, get_initial_rental_types, get_initial_cars, get_initial_cities
 
     async with AsyncSessionLocal() as session:
-        # Vérifier si les données existent déjà
+        # Insérer les villes
+        existing_cities = await session.execute(select(City))
+        if not existing_cities.scalars().first():
+            print("📝 Insertion des villes initiales...")
+            for city_data in get_initial_cities():
+                session.add(City(**city_data))
+
+        # Vérifier si les données (types) existent déjà
         existing_types = await session.execute(select(CarType))
         if existing_types.scalars().first():
-            print("📊 Données déjà présentes, pas besoin de seed.")
+            print("📊 Données types déjà présentes.")
+            await session.commit()
             return
 
-        print("📝 Insertion des données initiales...")
+        print("📝 Insertion des types de données initiales...")
 
         # Insérer les types de voitures
         for car_type_data in get_initial_car_types():

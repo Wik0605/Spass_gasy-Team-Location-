@@ -23,6 +23,19 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 
+class City(Base):
+    """
+    Villes disponibles pour la location (Départ / Arrivée)
+    """
+    __tablename__ = "cities"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    def __repr__(self):
+        return f"<City(id={self.id}, name='{self.name}')>"
+
 class CarType(Base):
     """
     Types/Catégories de voitures
@@ -238,6 +251,20 @@ class Rental(Base):
 # =============================================================================
 # DONNÉES INITIALES (à insérer lors de la création de la DB)
 # =============================================================================
+
+def get_initial_cities() -> list[dict]:
+    """
+    Retourne les villes par défaut pour la sélection
+    """
+    return [
+        {"name": "Antananarivo"},
+        {"name": "Mahajanga"},
+        {"name": "Toamasina"},
+        {"name": "Fianarantsoa"},
+        {"name": "Toliara"},
+        {"name": "Antsiranana"},
+    ]
+
 
 def get_initial_car_types() -> list[dict]:
     """

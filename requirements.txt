@@ -21,3 +21,6 @@ httpx>=0.26.0
 
 # Utilitaires python
 python-multipart>=0.0.6
+
+# Migrations
+alembic
