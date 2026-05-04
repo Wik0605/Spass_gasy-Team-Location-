@@ -6,30 +6,45 @@
 
 ```
 Spass_gasy/
-├── app/                      # Code principal de l'application
-│   ├── __init__.py          # Initialise le package
-│   ├── main.py              # Point d'entrée FastAPI
-│   ├── database.py          # Configuration base de données
-│   ├── models.py            # Modèles SQLAlchemy (tables DB)
-│   ├── schemas.py           # Schémas Pydantic (validation API)
-│   ├── routers/             # Routes FastAPI
+├── app/                          # Code principal de l'application
+│   ├── __init__.py
+│   ├── main.py                   # Point d'entrée FastAPI + seed données initiales
+│   ├── database.py               # Configuration SQLAlchemy async + SQLite
+│   ├── schemas.py                # Schémas Pydantic (validation API)
+│   ├── models/                   # Modèles SQLAlchemy (tables DB)
+│   │   ├── __init__.py           # Exports : Car, City, RentalType, CarImage...
+│   │   └── models.py             # Définitions des tables + données initiales
+│   ├── routers/                  # Routes FastAPI
 │   │   ├── __init__.py
-│   │   └── web.py           # Routes pages web (HTML)
-│   ├── services/            # Logique métier
-│   │   └── __init__.py
-│   └── templates/           # Templates Jinja2
-│       ├── base.html        # Template de base
-│       ├── index.html       # Page d'accueil
-│       └── partials/        # Fragments HTMX
-│           ├── _car_grid.html
-│           └── _car_list.html
-├── static/                   # Fichiers statiques
-│   └── css/
-│       └── style.css        # Styles personnalisés
-├── docs/                     # Documentation
-├── data/                     # Base de données SQLite
-├── run.py                   # Script de lancement
-└── requirements.txt          # Dépendances Python
+│   │   └── web.py                # Routes pages web HTML
+│   ├── services/                 # Logique métier (requêtes DB)
+│   │   ├── __init__.py
+│   │   ├── car_service.py        # CRUD voitures
+│   │   ├── city_service.py       # Lecture villes (utilisé par page d'accueil)
+│   │   └── rental_service.py    # Types de location
+│   ├── templates/                # Templates Jinja2
+│   │   ├── base.html             # Template de base (navbar, footer, bottom nav)
+│   │   ├── index.html            # Page d'accueil
+│   │   ├── cars.html             # Liste des voitures
+│   │   ├── car_detail.html       # Détail d'un véhicule
+│   │   ├── itineraire.html       # Calculateur d'itinéraire (Leaflet + BRouter)
+│   │   ├── booking.html          # Réservation
+│   │   ├── rental_types.html     # Tarifs
+│   │   ├── contact.html          # Contact
+│   │   ├── 404.html              # Page non trouvée
+│   │   └── partials/             # Fragments HTMX
+│   │       ├── _car_grid.html
+│   │       └── _car_list.html
+│   └── static/                   # Fichiers statiques servis par FastAPI
+├── alembic/                      # Migrations base de données
+│   └── versions/                 # Fichiers de migration
+├── data/                         # Base de données SQLite
+│   └── spass_gasy.db
+├── docs/                         # Documentation
+├── .vscode/
+│   └── settings.json             # formatOnSave:false pour HTML (protège Jinja2)
+├── run.py                        # Script de lancement
+└── requirements.txt              # Dépendances Python
 ```
 
 ## Stack technique

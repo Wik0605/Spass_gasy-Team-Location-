@@ -7,6 +7,7 @@
 - **Python 3.11+** : Le projet utilise les dernières fonctionnalités de Python
 - **pip** : Gestionnaire de packages Python
 - **Un éditeur de code** : VS Code recommandé avec l'extension Python
+- **Connexion internet** : Obligatoire pour Leaflet, BRouter et Nominatim (APIs externes)
 
 ## Installation
 
@@ -53,6 +54,18 @@ pip install -r requirements.txt
 | sqlalchemy | >=2.0.0 | ORM base de données |
 | aiosqlite | >=0.0.19 | Driver SQLite async |
 | pydantic | >=2.5.0 | Validation des données |
+| alembic | >=1.13.0 | Migrations base de données |
+
+**Librairies front chargées via CDN (aucune installation) :**
+
+| Librairie | CDN | Utilité |
+|-----------|-----|---------|
+| Leaflet.js 1.9.4 | unpkg.com | Carte interactive |
+| Tailwind CSS | cdn.tailwindcss.com | Styles utilitaires |
+| HTMX 1.9.10 | unpkg.com | Interactions dynamiques |
+| Alpine.js 3.x | jsdelivr.net | Micro-interactions JS |
+
+> **Important** : Leaflet, BRouter et Nominatim nécessitent une connexion internet. La carte ne fonctionnera pas hors ligne.
 
 ### 4. Lancer l'application
 
@@ -162,9 +175,31 @@ mypy app/
 # Lancer les tests
 pytest tests/
 
-# Créer une migration
+# Créer une migration Alembic
 alembic revision --autogenerate -m "Description"
+
+# Appliquer les migrations
+alembic upgrade head
+
+# Revenir à la migration précédente
+alembic downgrade -1
 ```
+
+### Important : Formateur HTML et templates Jinja2
+
+Le formateur automatique HTML de VS Code casse les expressions Jinja2 comme `{{ car.daily_price }}` en les découpant sur plusieurs lignes, ce qui plante l'app.
+
+Le fichier `.vscode/settings.json` est déjà configuré pour désactiver ce comportement :
+
+```json
+{
+  "[html]": {
+    "editor.formatOnSave": false
+  }
+}
+```
+
+Ne pas supprimer ce fichier.
 
 ### Débogage
 
