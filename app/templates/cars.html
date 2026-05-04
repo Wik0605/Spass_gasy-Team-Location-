@@ -25,18 +25,12 @@
                 {% if car.image_url %}
                 <img src="{{ car.image_url }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-full object-cover">
                 {% else %}
-                <span class="text-6xl">{{ car.car_type.icon if car.car_type else '🚗' }}</span>
+                <span class="text-6xl">🚗</span>
                 {% endif %}
             </div>
 
             <!-- Contenu -->
             <div class="p-5">
-                <!-- Type badge -->
-                {% if car.car_type %}
-                <span class="inline-block bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full mb-2">
-                    {{ car.car_type.name }}
-                </span>
-                {% endif %}
 
                 <!-- Nom -->
                 <h3 class="text-lg font-semibold text-gray-800 mb-1">
@@ -58,9 +52,17 @@
                     </div>
 
                     <!-- Bouton -->
-                    <a href="/cars/{{ car.id }}"
-                        class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
-                        Détails
+                    <div class="flex items-center gap-2"> <a href="/car/{{ car.id }}/itineraire"
+                            class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors flex items-center">
+                            Devis
+
+                        </a>
+
+                        <a href="/cars/{{ car.id }}"
+                            class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                            Détails
+                        </a>
+                    </div>
                     </a>
                 </div>
 

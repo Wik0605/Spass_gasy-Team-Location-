@@ -31,7 +31,7 @@
                 </h3>
                 <div class="flex items-center p-4 bg-indigo-50 rounded-xl">
                     <div class="w-16 h-16 bg-white rounded-lg flex items-center justify-center text-3xl shadow-sm mr-4">
-                        {% if car %}{{ car.car_type.icon if car.car_type else '🚗' }}{% else %}📋{% endif %}
+                        {% if car %}🚗{% else %}📋{% endif %}
                     </div>
                     <div>
                         <p class="font-bold text-gray-900">{% if car %}{{ car.brand }} {{ car.model }}{% else %}Sélectionnez un véhicule{% endif %}</p>

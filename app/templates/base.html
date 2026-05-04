@@ -156,14 +156,14 @@
                 </svg>
             </a>
 
-            <!-- Ma Réservation -->
-            <a href="/tracking"
-                class="flex flex-col items-center justify-center {{ 'text-[#ff6600]' if request.url.path == '/tracking' else 'text-gray-400 hover:text-[#ff6600]' }} transition-all">
+            <!-- Devis -->
+            <a href="/cars"
+                class="flex flex-col items-center justify-center {{ 'text-[#ff6600]' if request.url.path == '/cars' else 'text-gray-400 hover:text-[#ff6600]' }} transition-all">
                 <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L16 4m0 13V4m0 0L9 7" />
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
-                <span class="text-[10px] font-bold mt-1 uppercase tracking-widest">Tracking</span>
+                <span class="text-[10px] font-bold mt-1 uppercase tracking-widest">Devis</span>
             </a>
 
             <!-- Plus/Contact -->
@@ -208,7 +208,7 @@
                 <div>
                     <h3 class="text-white font-bold mb-6 uppercase tracking-wider text-xs">Services</h3>
                     <ul class="space-y-3 text-gray-400 text-sm">
-                        <li><a href="/tracking" class="hover:text-[#ff6600] transition-colors">Tracking GPS</a></li>
+                        <li><a href="/cars" class="hover:text-[#ff6600] transition-colors">Devis</a></li>
                         <li><a href="/contact" class="hover:text-[#ff6600] transition-colors">Assistance 24/7</a></li>
                     </ul>
                 </div>

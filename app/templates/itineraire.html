@@ -1,0 +1,508 @@
+{% extends "base.html" %}
+
+{% block title %}Calculateur d'itinéraire - {{ car.brand }} {{ car.model }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #map {
+        height: 100%;
+        width: 100%;
+        border-radius: 0.75rem;
+        z-index: 1;
+    }
+    .map-wrapper {
+        position: relative;
+        height: 420px;
+        border-radius: 1rem;
+        /* PAS de overflow:hidden — bloque les touch events sur iOS */
+    }
+    @media (max-width: 1024px) {
+        .map-wrapper { height: 70vh; }
+    }
+
+    /* Bannière flottante fixée en bas d'écran (hors de la carte) */
+    #pick-banner {
+        position: fixed;
+        bottom: 90px; /* au-dessus de la bottom nav mobile */
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        background: white;
+        border-radius: 2rem;
+        padding: 14px 24px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        min-width: 240px;
+        text-align: center;
+        animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp {
+        from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+        to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+    }
+    #pick-banner .pick-pulse {
+        font-size: 2rem;
+        animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+        0%,100% { transform: scale(1); }
+        50%      { transform: scale(1.2); }
+    }
+
+    /* Badge lieu sélectionné */
+    .location-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 6px;
+    }
+    .location-badge.start { background:#f0fdf4; color:#15803d; border:1.5px solid #86efac; }
+    .location-badge.end   { background:#fef2f2; color:#b91c1c; border:1.5px solid #fca5a5; }
+    .location-badge .badge-name { flex:1; font-size:0.8rem; font-weight:500; }
+    .location-badge .badge-clear {
+        background:none; border:none; cursor:pointer;
+        font-size:1rem; color:inherit; opacity:0.6; padding:2px 4px; border-radius:50%;
+    }
+
+    /* Bouton CTA pointer carte */
+    .pick-cta {
+        width:100%; border:2px dashed #c7d2fe; border-radius:12px; padding:12px;
+        background:#eef2ff; color:#4f46e5; font-weight:700; font-size:0.9rem;
+        cursor:pointer; transition:all 0.2s; display:flex; align-items:center;
+        justify-content:center; gap:8px;
+    }
+    .pick-cta:active { transform: scale(0.97); }
+    .pick-cta.end-cta { border-color:#fca5a5; background:#fef2f2; color:#b91c1c; }
+    .pick-cta.is-active { border-style:solid; opacity:0.6; }
+
+    /* Curseur croix quand mode pointage actif */
+    #map.picking-mode { cursor: crosshair !important; }
+</style>
+
+<!-- Bannière flottante mode pointage (hors carte, pas d'interférence touch) -->
+<div id="pick-banner" style="display:none;">
+    <span class="pick-pulse" id="pick-banner-icon">📍</span>
+    <span class="font-bold text-gray-800 text-sm" id="pick-banner-text">Touche la carte</span>
+    <button id="pick-cancel-btn" class="text-xs text-gray-400 underline mt-1">Annuler</button>
+</div>
+
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="mb-5 flex items-center justify-between flex-wrap gap-3">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">📍 Calculateur d'itinéraire</h1>
+            <p class="text-gray-500 mt-1 text-sm">{{ car.brand }} {{ car.model }} &mdash; {{ "{:,.0f}".format(car.daily_price) }} Ar/jour</p>
+        </div>
+        <a href="/cars/{{ car.id }}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">&larr; Retour</a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- ── Formulaire ── -->
+        <div class="lg:col-span-1 space-y-4" id="form-panel">
+            <div class="bg-white p-5 rounded-2xl shadow-md border border-gray-100">
+                <h3 class="text-base font-bold text-gray-800 mb-4">🗺️ Définir l'itinéraire</h3>
+
+                <!-- DÉPART -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">🟢 Départ</label>
+                    <div id="start-badge" class="location-badge start" style="display:none;">
+                        <span>🟢</span>
+                        <span class="badge-name" id="start-badge-name"></span>
+                        <button class="badge-clear" id="start-clear">✕</button>
+                    </div>
+                    <button type="button" id="pick-start-btn" class="pick-cta mt-1">
+                        <span>📍</span> Pointer le départ sur la carte
+                    </button>
+                </div>
+
+                <!-- Escales -->
+                <div id="waypoints-container" class="space-y-3 mb-2"></div>
+                <button type="button" id="add-waypoint-btn"
+                    class="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 mb-4">
+                    <span>+</span> Ajouter une escale
+                </button>
+
+                <!-- ARRIVÉE -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">🔴 Arrivée</label>
+                    <div id="end-badge" class="location-badge end" style="display:none;">
+                        <span>🔴</span>
+                        <span class="badge-name" id="end-badge-name"></span>
+                        <button class="badge-clear" id="end-clear">✕</button>
+                    </div>
+                    <button type="button" id="pick-end-btn" class="pick-cta end-cta mt-1">
+                        <span>📍</span> Pointer l'arrivée sur la carte
+                    </button>
+                </div>
+
+                <!-- Carburant -->
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 mb-4">
+                    <h4 class="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">Carburant</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Conso (L/100km)</label>
+                            <input type="number" id="fuel-consumption" value="8" step="0.5" min="1"
+                                class="w-full text-sm border border-gray-300 rounded-md px-2 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Prix Gasoil (Ar/L)</label>
+                            <input type="number" id="fuel-price" value="4900" step="100" min="0"
+                                class="w-full text-sm border border-gray-300 rounded-md px-2 py-2">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="calculate-btn"
+                    class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-indigo-700 active:scale-95 transition-all shadow-md">
+                    Calculer l'itinéraire
+                </button>
+            </div>
+
+            <!-- Résultats -->
+            <div id="results-card" class="bg-white p-5 rounded-2xl shadow-md border border-emerald-200" style="display:none;">
+                <h3 class="text-base font-bold text-emerald-700 mb-4">✅ Résumé estimatif</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-sm text-gray-600">Distance totale</span>
+                        <span class="font-bold text-gray-900"><span id="res-distance">0</span> km</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-sm text-gray-500">Location (1 jour)</span>
+                        <span class="text-sm font-medium text-gray-700">{{ "{:,.0f}".format(car.daily_price) }} Ar</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-sm text-gray-500">Carburant estimé</span>
+                        <span class="text-sm font-medium text-gray-700"><span id="res-fuel-cost">0</span> Ar</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 bg-emerald-50 px-3 rounded-lg">
+                        <span class="font-bold text-gray-800">Total Estimé</span>
+                        <span class="font-bold text-emerald-600 text-lg"><span id="res-total-cost">0</span> Ar</span>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-3 text-center">* Estimation indicative. Prix carburant variable.</p>
+                <a href="/booking?car_id={{ car.id }}"
+                    class="block w-full text-center bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-md mt-4 text-sm">
+                    Réserver ce véhicule
+                </a>
+            </div>
+        </div>
+
+        <!-- ── Carte ── -->
+        <div class="lg:col-span-2" id="map-col">
+            <div id="map-wrapper" class="bg-white p-2 rounded-2xl shadow-md border border-gray-100 map-wrapper">
+                <div id="map"></div>
+                <!-- Loader calcul itinéraire -->
+                <div id="map-loader" style="display:none;"
+                    class="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-xl z-50 flex flex-col items-center justify-center">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mb-3"></div>
+                    <p class="text-sm text-gray-500 font-medium">Calcul de l'itinéraire...</p>
+                </div>
+            </div>
+            <p class="text-xs text-gray-400 text-center mt-2">Carte propulsée par OpenStreetMap &amp; BRouter</p>
+        </div>
+    </div>
+</section>
+
+<!-- Template escale -->
+<template id="waypoint-template">
+    <div class="waypoint-item space-y-1">
+        <label class="block text-xs font-medium text-gray-500">Escale</label>
+        <div class="flex gap-2">
+            <button type="button" class="pick-waypoint-btn flex-grow border-2 border-dashed border-blue-300 bg-blue-50 text-blue-600 rounded-xl px-3 py-2.5 text-sm font-semibold">📍 Pointer l'escale sur la carte</button>
+            <button type="button" class="remove-waypoint-btn text-red-500 hover:text-red-700 p-2.5 bg-red-50 rounded-xl text-sm leading-none">✕</button>
+        </div>
+        <div class="waypoint-badge location-badge" style="display:none; background:#eff6ff; color:#1d4ed8; border:1.5px solid #93c5fd;">
+            <span>🔵</span>
+            <span class="badge-name waypoint-badge-name"></span>
+            <button type="button" class="badge-clear waypoint-badge-clear">✕</button>
+        </div>
+    </div>
+</template>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+    var DAILY_PRICE = {{ car.daily_price }};
+
+    // ── Carte ──
+    var map = L.map('map', { tap: true, tapTolerance: 15 }).setView([-18.91, 47.52], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    var routeLayer = null;
+    var markersLayer = L.layerGroup().addTo(map);
+    var pickMarkers = { start: null, end: null };
+    var pickedCoords = { start: null, end: null };
+    var pickingMode = null;       // 'start' | 'end' | DOM element (escale)
+    var waypointPickMarkers = []; // marqueurs des escales pointées
+
+    function makePickIcon(color) {
+        var html = '<div style="background:' + color + ';width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.5)"></div>';
+        return L.divIcon({ html: html, className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
+    }
+
+    // ── Bannière flottante (hors carte = pas d'interférence touch) ──
+    var banner = document.getElementById('pick-banner');
+
+    function showBanner(target) {
+        var icon = target === 'start' ? '🟢' : (target === 'end' ? '🔴' : '🔵');
+        var text = target === 'start'
+            ? 'Touche la carte pour poser le DÉPART'
+            : (target === 'end' ? 'Touche la carte pour poser l\'ARRIVÉE' : 'Touche la carte pour poser l\'ESCALE');
+        document.getElementById('pick-banner-icon').textContent = icon;
+        document.getElementById('pick-banner-text').textContent = text;
+        banner.style.display = 'flex';
+    }
+    function hideBanner() { banner.style.display = 'none'; }
+
+    // ── Activer / désactiver mode pointage ──
+    function activatePickMode(target) {
+        pickingMode = target;
+        document.getElementById('map').classList.add('picking-mode');
+        document.getElementById('pick-start-btn').classList.toggle('is-active', target === 'start');
+        document.getElementById('pick-end-btn').classList.toggle('is-active', target === 'end');
+        // Désactiver les boutons escales non concernés
+        document.querySelectorAll('.pick-waypoint-btn').forEach(function (b) {
+            b.classList.toggle('is-active', b.closest('.waypoint-item') === target);
+        });
+        showBanner(target);
+        if (window.innerWidth < 1024) {
+            document.getElementById('map-col').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function deactivatePickMode() {
+        pickingMode = null;
+        document.getElementById('map').classList.remove('picking-mode');
+        document.getElementById('pick-start-btn').classList.remove('is-active');
+        document.getElementById('pick-end-btn').classList.remove('is-active');
+        document.querySelectorAll('.pick-waypoint-btn').forEach(function (b) { b.classList.remove('is-active'); });
+        hideBanner();
+    }
+
+    document.getElementById('pick-cancel-btn').addEventListener('click', deactivatePickMode);
+
+    document.getElementById('pick-start-btn').addEventListener('click', function () {
+        pickingMode === 'start' ? deactivatePickMode() : activatePickMode('start');
+    });
+    document.getElementById('pick-end-btn').addEventListener('click', function () {
+        pickingMode === 'end' ? deactivatePickMode() : activatePickMode('end');
+    });
+
+    // ── Clic / tap sur la carte ──
+    map.on('click', function (e) {
+        if (!pickingMode) return;
+
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        var target = pickingMode;
+        var coordStr = lng.toFixed(6) + ',' + lat.toFixed(6);
+        var isWaypoint = (target !== 'start' && target !== 'end');
+
+        if (isWaypoint) {
+            // --- Escale pointée ---
+            var item = target; // élément DOM .waypoint-item
+            var color = '#3b82f6';
+            // Supprimer ancien marqueur de cette escale si existant
+            var oldMarker = item._pickMarker;
+            if (oldMarker) map.removeLayer(oldMarker);
+            var marker = L.marker([lat, lng], { icon: makePickIcon(color) })
+                .bindTooltip('Escale', { permanent: true, direction: 'top', offset: [0, -14] })
+                .addTo(map);
+            item._pickMarker = marker;
+            item._pickedCoord = coordStr;
+            // Afficher badge
+            var badge = item.querySelector('.waypoint-badge');
+            var badgeName = item.querySelector('.waypoint-badge-name');
+            badgeName.textContent = 'Localisation...';
+            badge.style.display = 'flex';
+            // Effacer badge via bouton ✕
+            item.querySelector('.waypoint-badge-clear').onclick = function () {
+                badge.style.display = 'none';
+                item._pickedCoord = null;
+                if (item._pickMarker) { map.removeLayer(item._pickMarker); item._pickMarker = null; }
+            };
+        } else {
+            // --- Départ / Arrivée ---
+            var color = target === 'start' ? '#22c55e' : '#ef4444';
+            if (pickMarkers[target]) map.removeLayer(pickMarkers[target]);
+            pickMarkers[target] = L.marker([lat, lng], { icon: makePickIcon(color) })
+                .bindTooltip(target === 'start' ? 'Départ' : 'Arrivée', { permanent: true, direction: 'top', offset: [0, -14] })
+                .addTo(map);
+            pickedCoords[target] = coordStr;
+            var badgeEl = document.getElementById(target + '-badge');
+            var badgeNameEl = document.getElementById(target + '-badge-name');
+            badgeNameEl.textContent = 'Localisation...';
+            badgeEl.style.display = 'flex';
+            // Géocodage pour départ/arrivée
+            reverseGeocode(lat, lng, badgeNameEl);
+        }
+
+        deactivatePickMode();
+        if (navigator.vibrate) navigator.vibrate(40);
+        if (window.innerWidth < 1024) {
+            setTimeout(function () {
+                document.getElementById('form-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 400);
+        }
+
+        if (isWaypoint) {
+            reverseGeocode(lat, lng, target.querySelector('.waypoint-badge-name'));
+        }
+    });
+
+    function reverseGeocode(lat, lng, el) {
+        fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json&accept-language=fr')
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                el.textContent = data.display_name
+                    ? data.display_name.split(',').slice(0, 2).join(', ')
+                    : lat.toFixed(4) + ', ' + lng.toFixed(4);
+            })
+            .catch(function () { el.textContent = lat.toFixed(4) + ', ' + lng.toFixed(4); });
+    }
+
+    // ── Effacer badge ──
+    document.getElementById('start-clear').addEventListener('click', function () {
+        pickedCoords.start = null;
+        if (pickMarkers.start) { map.removeLayer(pickMarkers.start); pickMarkers.start = null; }
+        document.getElementById('start-badge').style.display = 'none';
+    });
+    document.getElementById('end-clear').addEventListener('click', function () {
+        pickedCoords.end = null;
+        if (pickMarkers.end) { map.removeLayer(pickMarkers.end); pickMarkers.end = null; }
+        document.getElementById('end-badge').style.display = 'none';
+    });
+
+    // ── Escales ──
+    document.getElementById('add-waypoint-btn').addEventListener('click', function () {
+        var tmpl = document.getElementById('waypoint-template').content.cloneNode(true);
+        var item = tmpl.querySelector('.waypoint-item');
+
+        item.querySelector('.remove-waypoint-btn').addEventListener('click', function () {
+            if (item._pickMarker) map.removeLayer(item._pickMarker);
+            if (pickingMode === item) deactivatePickMode();
+            item.remove();
+        });
+
+        item.querySelector('.pick-waypoint-btn').addEventListener('click', function () {
+            if (pickingMode === item) { deactivatePickMode(); return; }
+            activatePickMode(item);
+        });
+
+        document.getElementById('waypoints-container').appendChild(item);
+    });
+
+    function getCoord(target) {
+        return pickedCoords[target] || null;
+    }
+
+    function getWaypointCoords() {
+        var coords = [];
+        document.querySelectorAll('.waypoint-item').forEach(function (item) {
+            if (item._pickedCoord) coords.push(item._pickedCoord);
+        });
+        return coords;
+    }
+
+    // ── Résultats ──
+    function showResults(distanceKm) {
+        var conso = parseFloat(document.getElementById('fuel-consumption').value) || 8;
+        var prixL = parseFloat(document.getElementById('fuel-price').value) || 4900;
+        var fuelCost = (distanceKm / 100) * conso * prixL;
+        var total = DAILY_PRICE + fuelCost;
+        document.getElementById('res-distance').textContent = distanceKm.toFixed(1);
+        document.getElementById('res-fuel-cost').textContent = Math.round(fuelCost).toLocaleString('fr-FR');
+        document.getElementById('res-total-cost').textContent = Math.round(total).toLocaleString('fr-FR');
+        var card = document.getElementById('results-card');
+        card.style.display = 'block';
+        if (window.innerWidth < 1024) {
+            setTimeout(function () { card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
+        }
+    }
+
+    // ── Calculer ──
+    document.getElementById('calculate-btn').addEventListener('click', async function () {
+        var start = getCoord('start');
+        var end = getCoord('end');
+        if (!start || !end) {
+            alert('Pointez ou sélectionnez un départ et une arrivée.');
+            return;
+        }
+        var coords = [start].concat(getWaypointCoords()).concat([end]);
+
+        var url = 'https://brouter.de/brouter?lonlats=' + coords.join('|') + '&profile=car-eco&alternativeidx=0&format=geojson';
+        document.getElementById('map-loader').style.display = 'flex';
+
+        try {
+            var resp = await fetch(url);
+            if (!resp.ok) throw new Error('BRouter error ' + resp.status);
+            var geojson = await resp.json();
+
+            if (routeLayer) map.removeLayer(routeLayer);
+            markersLayer.clearLayers();
+
+            routeLayer = L.geoJSON(geojson, { style: { color: '#4f46e5', weight: 5, opacity: 0.85 } }).addTo(map);
+
+            coords.forEach(function (coord, i) {
+                var parts = coord.split(',');
+                var lon = parseFloat(parts[0]), lat = parseFloat(parts[1]);
+                var color = i === 0 ? '#22c55e' : (i === coords.length - 1 ? '#ef4444' : '#3b82f6');
+                var html = '<div style="background:' + color + ';width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4)"></div>';
+                L.marker([lat, lon], { icon: L.divIcon({ html: html, className: '', iconSize: [16, 16], iconAnchor: [8, 8] }) }).addTo(markersLayer);
+            });
+
+            map.fitBounds(routeLayer.getBounds(), { padding: [30, 30] });
+            showResults(parseFloat(geojson.features[0].properties['track-length']) / 1000);
+
+        } catch (e) {
+            console.error(e);
+            alert('Impossible de calculer l\'itinéraire. Vérifiez votre connexion ou réessayez.');
+        } finally {
+            document.getElementById('map-loader').style.display = 'none';
+        }
+    });
+
+    // ── Scroll : carte par-dessus le navbar ──
+    var mapCol = document.getElementById('map-col');
+    var mapWrapper = document.getElementById('map-wrapper');
+    var placeholder = document.createElement('div');
+    var isFixed = false;
+
+    window.addEventListener('scroll', function () {
+        var rect = mapCol.getBoundingClientRect();
+        var colWidth = mapCol.offsetWidth;
+        if (!isFixed && rect.top <= 0) {
+            placeholder.style.height = mapWrapper.offsetHeight + 'px';
+            mapCol.insertBefore(placeholder, mapWrapper);
+            mapWrapper.style.position = 'fixed';
+            mapWrapper.style.top = '0';
+            mapWrapper.style.width = colWidth + 'px';
+            mapWrapper.style.zIndex = '100';
+            mapWrapper.style.borderRadius = '0';
+            isFixed = true;
+            setTimeout(function () { map.invalidateSize(); }, 50);
+        } else if (isFixed && rect.top > 0) {
+            mapWrapper.style.position = '';
+            mapWrapper.style.top = '';
+            mapWrapper.style.width = '';
+            mapWrapper.style.zIndex = '';
+            mapWrapper.style.borderRadius = '';
+            if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+            isFixed = false;
+            setTimeout(function () { map.invalidateSize(); }, 50);
+        }
+    });
+
+})();
+</script>
+{% endblock %}

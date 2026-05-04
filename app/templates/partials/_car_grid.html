@@ -24,7 +24,7 @@ HTMX attend un fragment HTML, pas une page complète.
             <img src="{{ car.image_url }}" alt="{{ car.full_name }}" class="w-full h-full object-cover">
             {% else %}
             <!-- Placeholder si pas d'image -->
-            <span class="text-6xl">{{ car.car_type.icon if car.car_type else '🚗' }}</span>
+            <span class="text-6xl">🚗</span>
             {% endif %}
         </div>
 
@@ -32,11 +32,7 @@ HTMX attend un fragment HTML, pas une page complète.
         <!-- Contenu de la carte -->
         <div class="p-5">
             <!-- Type de voiture (badge) -->
-            {% if car.car_type %}
-            <span class="inline-block bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full mb-2">
-                {{ car.car_type.name }}
-            </span>
-            {% endif %}
+
 
             <!-- Nom de la voiture -->
             <h3 class="text-lg font-semibold text-gray-800 mb-1">

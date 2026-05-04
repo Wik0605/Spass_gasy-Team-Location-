@@ -21,7 +21,7 @@ La différence avec _car_grid.html :
             {% if car.image_url %}
             <img src="{{ car.image_url }}" alt="{{ car.full_name }}" class="w-full h-full object-cover rounded-lg">
             {% else %}
-            <span class="text-3xl">{{ car.car_type.icon if car.car_type else '🚗' }}</span>
+            <span class="text-3xl">🚗</span>
             {% endif %}
         </div>
 
@@ -32,11 +32,7 @@ La différence avec _car_grid.html :
                 <h3 class="font-semibold text-gray-800">
                     {{ car.brand }} {{ car.model }}
                 </h3>
-                {% if car.car_type %}
-                <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full">
-                    {{ car.car_type.name }}
-                </span>
-                {% endif %}
+
             </div>
 
             <!-- Détails -->

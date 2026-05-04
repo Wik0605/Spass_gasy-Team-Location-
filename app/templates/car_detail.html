@@ -4,35 +4,105 @@
 
 {% block content %}
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
     <!-- Fil d'ariane -->
     <nav class="flex mb-8 text-sm text-gray-500">
-        <a href="/" class="hover:text-indigo-600">Accueil</a>
+        <a href="/" class="hover:text-[#ff6600]">Accueil</a>
         <span class="mx-2">/</span>
-        <a href="/cars" class="hover:text-indigo-600">Nos véhicules</a>
+        <a href="/cars" class="hover:text-[#ff6600]">Nos véhicules</a>
         <span class="mx-2">/</span>
         <span class="text-gray-900 font-medium">{{ car.brand }} {{ car.model }}</span>
     </nav>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <!-- Colonne Gauche : Image et Galerie -->
-        <!--genere moi un code pour afficher les images de la voiture et un carousels avec les fleches pour naviguer entre les images-->
-        <div class="relative bg-gradient-to-br from-gray-100 to-gray-200 h-96 rounded-2xl overflow-hidden flex items-center justify-center">
-            {% if car.image_url %}
-            <img src="{{ car.image_url }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-full object-cover">
-            {% else %}
-            <span class="text-9xl">{{ car.car_type.icon if car.car_type else '🚗' }}</span>
+
+        <!-- Colonne Gauche : Carousel -->
+        <div class="space-y-4">
+
+            {# On construit la liste des photos à afficher.
+            Priorité : car.images (table CarImage) → sinon car.image_url → sinon aucune photo #}
+            {% set photos = car.images | map(attribute='url') | list %}
+            {% if not photos and car.image_url %}
+            {% set photos = [car.image_url] %}
             {% endif %}
-        </div>
 
+            {% if photos %}
+            <!-- Carousel principal -->
+            <div class="relative rounded-2xl overflow-hidden bg-gray-100" id="carousel">
 
+                <!-- Conteneur des slides -->
+                <div id="carousel-track" class="flex transition-transform duration-300 ease-in-out">
+                    {% for photo in photos %}
+                    <div class="min-w-full h-80 md:h-96 flex-shrink-0">
+                        <img src="{{ photo }}" alt="{{ car.brand }} {{ car.model }} — photo {{ loop.index }}"
+                            class="w-full h-full object-cover">
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Flèche gauche -->
+                {% if photos | length > 1 %}
+                <button onclick="carouselPrev()"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-black rounded-full w-10 h-10 flex items-center justify-center shadow-md transition-all">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                <!-- Flèche droite -->
+                <button onclick="carouselNext()"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-black rounded-full w-10 h-10 flex items-center justify-center shadow-md transition-all">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+
+                <!-- Indicateurs (points) -->
+                <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2" id="carousel-dots">
+                    {% for photo in photos %}
+                    <button onclick="carouselGoTo({{ loop.index0 }})"
+                        class="w-2 h-2 rounded-full transition-all {% if loop.first %}bg-white scale-125{% else %}bg-white/50{% endif %}"
+                        id="dot-{{ loop.index0 }}">
+                    </button>
+                    {% endfor %}
+                </div>
+
+                <!-- Compteur -->
+                <div class="absolute top-3 right-3 bg-black/50 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    <span id="carousel-counter">1</span> / {{ photos | length }}
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- Miniatures cliquables -->
+            {% if photos | length > 1 %}
+            <div class="flex gap-2 overflow-x-auto pb-1">
+                {% for photo in photos %}
+                <button onclick="carouselGoTo({{ loop.index0 }})"
+                    class="flex-shrink-0 w-20 h-14 rounded-xl overflow-hidden border-2 transition-all
+                           {% if loop.first %}border-[#ff6600]{% else %}border-transparent opacity-60 hover:opacity-100{% endif %}" id="thumb-{{ loop.index0 }}">
+                    <img src="{{ photo }}" alt="miniature {{ loop.index }}" class="w-full h-full object-cover">
+                </button>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Aucune photo disponible -->
+            <div class="h-80 rounded-2xl bg-gray-100 flex flex-col items-center justify-center text-gray-400">
+                <span class="text-6xl mb-3">🚗</span>
+                <p class="text-sm">Aucune photo disponible</p>
+            </div>
+            {% endif %}
 
             <!-- Caractéristiques rapides -->
-            <div class="grid grid-cols-3 gap-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm text-center">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm text-center border border-gray-100">
                     <span class="block text-2xl mb-1">💺</span>
                     <span class="text-sm font-medium text-gray-700">{{ car.seats }} places</span>
                 </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm text-center">
+                <div class="bg-white p-4 rounded-xl shadow-sm text-center border border-gray-100">
                     <span class="block text-2xl mb-1">📅</span>
                     <span class="text-sm font-medium text-gray-700">{{ car.year }}</span>
                 </div>
@@ -42,30 +112,22 @@
         <!-- Colonne Droite : Infos et Réservation -->
         <div class="space-y-8">
             <div>
-                {% if car.car_type %}
-                <span
-                    class="inline-block bg-indigo-100 text-indigo-800 text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider mb-4">
-                    {{ car.car_type.name }}
-                </span>
-                {% endif %}
                 <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ car.brand }} {{ car.model }}</h1>
-                <p class="text-2xl font-bold text-indigo-600">
-                    {{ "{:,.0f}".format(car.daily_price) }} Ar <span class="text-base font-normal text-gray-500">/
-                        jour</span>
+                <p class="text-2xl font-bold text-[#ff6600]">
+                    {{ "{:,.0f}".format(car.daily_price) }} Ar
+                    <span class="text-base font-normal text-gray-500">/ jour</span>
                 </p>
             </div>
 
-            <div class="prose prose-indigo text-gray-600">
+            <div class="text-gray-600">
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Description</h3>
-                <p>
-                    {{ car.description or "Aucune description disponible pour ce véhicule." }}
-                </p>
+                <p>{{ car.description or "Aucune description disponible pour ce véhicule." }}</p>
             </div>
 
-            <!-- Formulaire de réservation rapide ou Lien vers page réservation -->
-            <div class="bg-white p-6 rounded-2xl shadow-xl border border-indigo-50">
-                <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                    <span class="mr-2">📝</span> Réserver ce véhicule
+            <!-- Formulaire de réservation -->
+            <div class="bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
+                <h3 class="text-xl font-bold text-gray-900 mb-6">
+                    📝 Réserver ce véhicule
                 </h3>
 
                 <form action="/booking" method="GET" class="space-y-4">
@@ -74,24 +136,73 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Formule de location</label>
                         <select name="rental_type"
-                            class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#ff6600]">
                             {% for type in rental_types %}
-                            <option value="{{ type.id }}">{{ type.name }} ({{ type.duration_days }} jours)</option>
+                            <option value="{{ type.id }}">{{ type.name }} — {{ type.duration_days }} jour(s)</option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <button type="submit"
-                        class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition-all transform hover:scale-[1.02] shadow-lg">
+                        class="w-full bg-[#ff6600] text-white py-4 rounded-xl font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] shadow-lg">
                         Continuer vers la réservation
                     </button>
+
+                    <a href="/car/{{ car.id }}/itineraire"
+                        class="block w-full bg-gray-900 text-white text-center py-4 rounded-xl font-bold text-lg hover:bg-[#ff6600] transition-all hover:scale-[1.02] shadow-lg">
+                        📍 Planifier un itinéraire
+                    </a>
                 </form>
 
-                <p class="text-xs text-gray-500 mt-4 text-center">
-                    Une assistance 24/7 et une assurance tous risques sont incluses pour chaque location.
+                <p class="text-xs text-gray-400 mt-4 text-center">
+                    Assistance 24/7 et assurance incluses pour chaque location.
                 </p>
             </div>
         </div>
     </div>
 </section>
+
+<!-- Script carousel (vanilla JS, pas de librairie externe) -->
+{% if photos is defined and photos | length > 1 %}
+<script>
+    const total = {{ photos | length }};
+    let current = 0;
+
+    function carouselGoTo(index) {
+        current = index;
+        // Déplacer le track
+        document.getElementById('carousel-track').style.transform = `translateX(-${current * 100}%)`;
+        // Mettre à jour le compteur
+        document.getElementById('carousel-counter').textContent = current + 1;
+        // Mettre à jour les points
+        for (let i = 0; i < total; i++) {
+            const dot = document.getElementById('dot-' + i);
+            const thumb = document.getElementById('thumb-' + i);
+            if (i === current) {
+                dot.classList.add('bg-white', 'scale-125');
+                dot.classList.remove('bg-white/50');
+                if (thumb) {
+                    thumb.classList.add('border-[#ff6600]');
+                    thumb.classList.remove('border-transparent', 'opacity-60');
+                }
+            } else {
+                dot.classList.remove('bg-white', 'scale-125');
+                dot.classList.add('bg-white/50');
+                if (thumb) {
+                    thumb.classList.remove('border-[#ff6600]');
+                    thumb.classList.add('border-transparent', 'opacity-60');
+                }
+            }
+        }
+    }
+
+    function carouselNext() {
+        carouselGoTo((current + 1) % total);
+    }
+
+    function carouselPrev() {
+        carouselGoTo((current - 1 + total) % total);
+    }
+</script>
+{% endif %}
 {% endblock %}
