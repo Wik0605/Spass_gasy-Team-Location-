@@ -119,11 +119,15 @@ var map = L.map('map', {
 
 ---
 
-## Calcul d'itinéraire via BRouter
+## Calcul d'itinéraire — BRouter + OSRM en parallèle
 
-BRouter est une API open source de calcul d'itinéraire routier utilisant les données OpenStreetMap.
+Les deux APIs sont lancées **simultanément**. Le premier résultat valide est utilisé, l'autre est ignoré. Cela garantit vitesse et robustesse : OSRM répond en général en moins d'1 seconde, BRouter offre une meilleure qualité de tracé quand il réussit.
 
-### Format de la requête
+```javascript
+var distanceKm = await firstValid(calcBRouter(coords), calcOSRM(coords));
+```
+
+### BRouter (qualité prioritaire)
 
 ```
 GET https://brouter.de/brouter
@@ -133,20 +137,36 @@ GET https://brouter.de/brouter
     &format=geojson
 ```
 
-- `lonlats` : liste des points séparés par `|`, format `longitude,latitude`
-- `profile=car-eco` : profil voiture économique
-- `format=geojson` : réponse GeoJSON
+- Séparateur entre points : `|`
+- Format coordonnées : `longitude,latitude`
+- Distance lue depuis : `geojson.features[0].properties['track-length']` (en mètres)
+- **Limite** : peut échouer (HTTP 500) si le réseau routier OSM est incomplet (zones rurales de Madagascar)
 
-### Lecture de la distance
+### OSRM (fallback rapide)
+
+```
+GET https://router.project-osrm.org/route/v1/driving/lon1,lat1;lon2,lat2;lon3,lat3
+    ?overview=full
+    &geometries=geojson
+```
+
+- Séparateur entre points : `;`
+- Distance lue depuis : `data.routes[0].distance` (en mètres)
+- Meilleure couverture globale, réponse plus rapide
+- La géométrie est convertie en FeatureCollection pour rester compatible avec `L.geoJSON()`
+
+### Logique `firstValid`
 
 ```javascript
-var distanceM = parseFloat(geojson.features[0].properties['track-length']);
-var distanceKm = distanceM / 1000;
+function firstValid(...promises) {
+    // Retourne le premier résultat non-null parmi les promises
+    // Si toutes retournent null → resolve(null)
+}
 ```
 
 ### Important : aller-retour
 
-BRouter calcule **exactement le trajet défini**. Pour un aller-retour A→B→A, il faut explicitement mettre A comme point d'arrivée. La distance totale sera A→B + B→A.
+Les deux APIs calculent **exactement le trajet défini**. Pour un aller-retour A→B→A, mettre A comme point d'arrivée explicitement.
 
 ---
 
