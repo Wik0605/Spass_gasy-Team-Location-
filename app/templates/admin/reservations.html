@@ -1,0 +1,32 @@
+{% extends "admin/base_admin.html" %}
+{% set active = "reservations" %}
+
+{% block title %}Réservations{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold text-gray-900 mb-8">Réservations</h1>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+    <table class="w-full text-sm min-w-[900px]">
+        <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+            <tr>
+                <th class="px-4 py-3 text-left">#</th>
+                <th class="px-4 py-3 text-left">Client</th>
+                <th class="px-4 py-3 text-left">Véhicule</th>
+                <th class="px-4 py-3 text-left">Formule</th>
+                <th class="px-4 py-3 text-left">Dates</th>
+                <th class="px-4 py-3 text-left">Plan de voyage</th>
+                <th class="px-4 py-3 text-left">Statut</th>
+                <th class="px-4 py-3 text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+            {% for rental in rentals %}
+                {% include "admin/partials/_rental_row.html" %}
+            {% else %}
+            <tr><td colspan="8" class="px-6 py-10 text-center text-gray-400">Aucune réservation pour le moment</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

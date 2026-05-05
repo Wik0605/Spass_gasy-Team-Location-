@@ -23,7 +23,12 @@
             </div>
         </div>
 
-        <form class="p-8 space-y-8">
+        <form class="p-8 space-y-8" method="POST" action="/booking">
+            <input type="hidden" name="itinerary_distance_km" value="{{ itinerary_distance or '' }}">
+            <input type="hidden" name="itinerary_start_name" value="{{ itinerary_start or '' }}">
+            <input type="hidden" name="itinerary_end_name" value="{{ itinerary_end or '' }}">
+            <input type="hidden" name="itinerary_waypoints" value="{{ itinerary_waypoints or '' }}">
+            {% if car %}<input type="hidden" name="car_id" value="{{ car.id }}">{% endif %}
             <!-- Section Véhicule -->
             <div class="space-y-4">
                 <h3 class="text-xl font-bold text-gray-900 flex items-center">
@@ -36,7 +41,7 @@
                     <div>
                         <p class="font-bold text-gray-900">{% if car %}{{ car.brand }} {{ car.model }}{% else %}Sélectionnez un véhicule{% endif %}</p>
                         {% if not car %}
-                        <select name="car_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                        <select name="car_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
                             {% for c in cars %}
                                 <option value="{{ c.id }}">{{ c.brand }} {{ c.model }} ({{ "{:,.0f}".format(c.daily_price) }} Ar/j)</option>
                             {% endfor %}
@@ -54,15 +59,15 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
-                        <input type="text" name="name" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ex: Jean Rakoto">
+                        <input type="text" name="customer_name" required class="w-full border-gray-300 rounded-lg shadow-sm" placeholder="Ex: Jean Rakoto">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-                        <input type="tel" name="phone" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ex: +261 34 00 000 00">
+                        <input type="tel" name="customer_phone" required class="w-full border-gray-300 rounded-lg shadow-sm" placeholder="Ex: +261 34 00 000 00">
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email (Optionnel)</label>
-                        <input type="email" name="email" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ex: jean@email.mg">
+                        <input type="email" name="customer_email" class="w-full border-gray-300 rounded-lg shadow-sm" placeholder="Ex: jean@email.mg">
                     </div>
                 </div>
             </div>
@@ -75,11 +80,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Date de début</label>
-                        <input type="date" name="start_date" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        <input type="date" name="start_date" required class="w-full border-gray-300 rounded-lg shadow-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Formule choisie</label>
-                        <select name="rental_type" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                        <select name="rental_type_id" class="w-full border-gray-300 rounded-lg shadow-sm text-sm">
                             {% for type in rental_types %}
                                 <option value="{{ type.id }}">{{ type.name }} - {{ type.duration_days }} jours</option>
                             {% endfor %}

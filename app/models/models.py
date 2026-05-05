@@ -52,6 +52,7 @@ class Car(Base):
     image_url: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     seats: Mapped[int] = mapped_column(Integer, default=5)
+    fuel_consumption: Mapped[float] = mapped_column(Float, default=8.0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -128,6 +129,10 @@ class Rental(Base):
     total_price: Mapped[float] = mapped_column(Float, nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="confirmée")
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    itinerary_distance_km: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    itinerary_start_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    itinerary_end_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    itinerary_waypoints: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

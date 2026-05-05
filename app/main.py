@@ -17,6 +17,7 @@ from pathlib import Path
 
 from app.database import init_db, engine
 from app.routers.web import router as web_router
+from app.routers.admin import router as admin_router
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
 ASSETS_DIR = Path(__file__).parent / "assets"
@@ -97,6 +98,7 @@ if ASSETS_DIR.exists():
     app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
 
 app.include_router(web_router)
+app.include_router(admin_router)
 
 
 @app.get("/health")

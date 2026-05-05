@@ -1,0 +1,93 @@
+{% extends "admin/base_admin.html" %}
+{% set active = "dashboard" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="text-xl lg:text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+
+<!-- Stats -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Réservations</p>
+        <p class="text-2xl lg:text-3xl font-bold text-gray-900">{{ stats.total_rentals }}</p>
+    </div>
+    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Voitures</p>
+        <p class="text-2xl lg:text-3xl font-bold text-gray-900">{{ stats.total_cars }}</p>
+        <p class="text-xs text-emerald-600 mt-1">{{ stats.available_cars }} dispo.</p>
+    </div>
+    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Revenus</p>
+        <p class="text-lg lg:text-2xl font-bold text-emerald-600">{{ "{:,.0f}".format(stats.total_revenue) }} Ar</p>
+    </div>
+    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Indisponibles</p>
+        <p class="text-2xl lg:text-3xl font-bold text-orange-500">{{ stats.total_cars - stats.available_cars }}</p>
+    </div>
+</div>
+
+<!-- Dernières réservations -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-4 lg:px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="font-bold text-gray-800 text-sm lg:text-base">Dernières réservations</h2>
+        <a href="/admin/reservations" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">Voir toutes →</a>
+    </div>
+
+    <!-- Vue mobile : cartes -->
+    <div class="lg:hidden divide-y divide-gray-50">
+        {% for rental in recent_rentals %}
+        <div class="px-4 py-4 space-y-1">
+            <div class="flex items-center justify-between">
+                <span class="font-semibold text-gray-900 text-sm">{{ rental.customer_name }}</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold
+                    {% if rental.status == 'confirmée' %}bg-blue-100 text-blue-700
+                    {% elif rental.status == 'en_cours' %}bg-emerald-100 text-emerald-700
+                    {% elif rental.status == 'terminée' %}bg-gray-100 text-gray-600
+                    {% else %}bg-red-100 text-red-600{% endif %}">
+                    {{ rental.status }}
+                </span>
+            </div>
+            <p class="text-xs text-gray-500">{{ rental.car.brand }} {{ rental.car.model }}</p>
+            <p class="text-xs font-bold text-gray-800">{{ "{:,.0f}".format(rental.total_price) }} Ar</p>
+        </div>
+        {% else %}
+        <p class="px-4 py-8 text-center text-gray-400 text-sm">Aucune réservation</p>
+        {% endfor %}
+    </div>
+
+    <!-- Vue desktop : table -->
+    <table class="hidden lg:table w-full text-sm">
+        <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+            <tr>
+                <th class="px-6 py-3 text-left">#</th>
+                <th class="px-6 py-3 text-left">Client</th>
+                <th class="px-6 py-3 text-left">Véhicule</th>
+                <th class="px-6 py-3 text-left">Statut</th>
+                <th class="px-6 py-3 text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+            {% for rental in recent_rentals %}
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 text-gray-400">#{{ rental.id }}</td>
+                <td class="px-6 py-4 font-medium text-gray-900">{{ rental.customer_name }}</td>
+                <td class="px-6 py-4 text-gray-600">{{ rental.car.brand }} {{ rental.car.model }}</td>
+                <td class="px-6 py-4">
+                    <span class="px-2 py-1 rounded-full text-xs font-semibold
+                        {% if rental.status == 'confirmée' %}bg-blue-100 text-blue-700
+                        {% elif rental.status == 'en_cours' %}bg-emerald-100 text-emerald-700
+                        {% elif rental.status == 'terminée' %}bg-gray-100 text-gray-600
+                        {% else %}bg-red-100 text-red-600{% endif %}">
+                        {{ rental.status }}
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-right font-semibold text-gray-800">{{ "{:,.0f}".format(rental.total_price) }} Ar</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">Aucune réservation</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
