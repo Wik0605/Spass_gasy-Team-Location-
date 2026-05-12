@@ -125,14 +125,14 @@ DATABASE_URL = "postgresql+asyncpg://user:password@host:5432/dbname"
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  CarType    │     │    Car      │     │  RentalType │
+│  CarImage   │     │    Car      │     │  RentalType │
 ├─────────────┤     ├─────────────┤     ├─────────────┤
-│ id          │◄────│ car_type_id │     │ id          │
-│ name        │     │ id          │────►│ name        │
-│ description │     │ brand       │     │ duration    │
-│ icon        │     │ model       │     │ multiplier  │
-└─────────────┘     │ daily_price │     │ discount    │
-                    │ is_available│     └─────────────┘
+│ id          │     │ id          │────►│ id          │
+│ car_id      │────►│ brand       │     │ name        │
+│ url         │     │ model       │     │ duration    │
+│ position    │     │ daily_price │     │ multiplier  │
+└─────────────┘     │ is_available│     │ discount    │
+                    │ seats       │     └─────────────┘
                     └──────┬──────┘            │
                            │                   │
                            ▼                   │
@@ -151,7 +151,7 @@ DATABASE_URL = "postgresql+asyncpg://user:password@host:5432/dbname"
 
 ### Relations
 
-- **CarType → Car** : Un type peut avoir plusieurs voitures (one-to-many)
+- **Car → CarImage** : Une voiture peut avoir plusieurs photos (one-to-many)
 - **Car → Rental** : Une voiture peut avoir plusieurs locations (one-to-many)
 - **RentalType → Rental** : Un type de location peut avoir plusieurs locations (one-to-many)
 
@@ -164,9 +164,8 @@ Utilisateur → GET /
     ↓
 router.web.home()
     ↓
-1. Récupérer CarType depuis DB
-2. Récupérer RentalType depuis DB
-3. Récupérer Cars disponibles depuis DB
+1. Récupérer RentalType depuis DB
+2. Récupérer Cars disponibles depuis DB (avec images)
     ↓
 Template index.html + données
     ↓
@@ -176,13 +175,13 @@ HTML → Navigateur
 ### Recherche dynamique (HTMX)
 
 ```
-Utilisateur → Sélectionne un type de voiture
+Utilisateur → Applique un filtre (prix, places...)
     ↓
-HTMX → GET /api/cars/search?car_type=X
+HTMX → GET /api/cars/search?...
     ↓
 router.web.search_cars()
     ↓
-Filtrer Cars par type
+Filtrer Cars selon les critères
     ↓
 Template _car_grid.html (fragment)
     ↓

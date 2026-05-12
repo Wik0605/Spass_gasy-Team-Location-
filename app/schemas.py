@@ -111,10 +111,6 @@ class CarBase(BaseModel):
         gt=0,
         description="Prix journalier de base (en Ariary)"
     )
-    car_type_id: int = Field(
-        ...,
-        description="ID du type de voiture"
-    )
     seats: int = Field(
         default=5,
         ge=1,
@@ -148,7 +144,6 @@ class CarUpdate(BaseModel):
     year: Optional[int] = Field(None, ge=2000, le=2025)
     plate_number: Optional[str] = Field(None, min_length=4, max_length=20)
     daily_price: Optional[float] = Field(None, gt=0)
-    car_type_id: Optional[int] = None
     seats: Optional[int] = Field(None, ge=1, le=9)
    
     description: Optional[str] = None

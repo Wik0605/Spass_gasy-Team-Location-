@@ -4,31 +4,16 @@
 
 ## Tables
 
-### CarType (Types de voitures)
+### CarImage (Photos des voitures)
 
-Les catégories de véhicules disponibles.
+Les photos associées à chaque voiture (relation one-to-many).
 
 ```python
-class CarType:
-    id: int           # Clé primaire
-    name: str         # Nom (ex: "Économique", "SUV")
-    description: str  # Description
-    icon: str         # Emoji ou nom d'icône
-```
-
-**Utilisation** :
-```python
-# Créer un type
-car_type = CarType(
-    name="Économique",
-    description="Voitures économiques pour la ville",
-    icon="🚗"
-)
-await session.add(car_type)
-
-# Récupérer tous les types
-result = await session.execute(select(CarType))
-types = result.scalars().all()
+class CarImage:
+    id: int       # Clé primaire
+    car_id: int   # Clé étrangère vers Car
+    url: str      # URL de l'image
+    position: int # Ordre d'affichage (0 = photo principale)
 ```
 
 ### Car (Voitures)
@@ -41,14 +26,13 @@ class Car:
     brand: str           # Marque (Toyota, Renault...)
     model: str           # Modèle (Yaris, Duster...)
     year: int            # Année
-    plate_number: str    # Immatriculation
+    plate_number: str    # Immatriculation (unique)
     daily_price: float   # Prix par jour (Ariary)
     is_available: bool   # Disponibilité
-    car_type_id: int     # Clé étrangère vers CarType
-    seats: int            # Nombre de places
-    transmission: str    # "manuelle" ou "automatique" 
+    seats: int           # Nombre de places
+    fuel_consumption: float  # Consommation (L/100km)
     description: str     # Description
-    image_url: str       # URL de l'image
+    image_url: str       # URL de l'image principale
 ```
 
 **Utilisation** :
@@ -61,13 +45,13 @@ result = await session.execute(
 )
 cars = result.scalars().all()
 
-# Récupérer une voiture avec son type (eager loading)
+# Récupérer une voiture avec ses images (eager loading)
 result = await session.execute(
     select(Car)
     .where(Car.id == car_id)
-    .options(selectinload(Car.car_type))
+    .options(selectinload(Car.images))
 )
-car = result.scalar_one()
+car = result.scalar_one_or_none()
 ```
 
 ### RentalType (Types de location)
@@ -139,13 +123,9 @@ await session.commit()
 ### Accéder aux données liées
 
 ```python
-# Depuis une voiture, obtenir son type
+# Depuis une voiture, obtenir ses images
 car = await session.get(Car, 1)
-car_type = car.car_type  # Relation automatique
-
-# Depuis un type, obtenir toutes ses voitures
-car_type = await session.get(CarType, 1)
-cars = car_type.cars  # Relation automatique
+images = car.images  # Relation automatique (triées par position)
 
 # Depuis une location, obtenir la voiture et le type
 rental = await session.get(Rental, 1)
@@ -160,17 +140,17 @@ Pour éviter les requêtes N+1, utilisez `selectinload` :
 ```python
 from sqlalchemy.orm import selectinload
 
-# Charger les voitures avec leur type en une seule requête
+# Charger les voitures avec leurs images en une seule requête
 result = await session.execute(
     select(Car)
-    .options(selectinload(Car.car_type))
+    .options(selectinload(Car.images))
     .where(Car.is_available == True)
 )
 cars = result.scalars().all()
 
-# Maintenant car.car_type est déjà chargé
+# Maintenant car.images est déjà chargé
 for car in cars:
-    print(f"{car.brand} {car.model} - {car.car_type.name}")
+    print(f"{car.brand} {car.model} - {len(car.images)} photo(s)")
 ```
 
 ## Migrations
