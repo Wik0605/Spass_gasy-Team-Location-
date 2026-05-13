@@ -37,7 +37,7 @@ DATABASE_URL = f"sqlite+aiosqlite:///{DATABASE_PATH}"
 # future=True active le comportement SQLAlchemy 2.0
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True,  # Affiche les requêtes SQL (désactiver en production)
+    echo=False,
     future=True
 )
 
