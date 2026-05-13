@@ -20,13 +20,12 @@ Ou directement :
 
 import uvicorn
 
-if __name__ == "__main__":
-    # Configuration du serveur de développement
-    uvicorn.run(
+uvicorn.run(
         "app.main:app",  # Module:application
-        host="0.0.0.0",  # Accessible depuis le réseau local (téléphone, etc.)
-        port=5501,  # Port standard pour le développement
-        reload=True,  # Rechargement automatique en développement
-        reload_dirs=["app"],  # Dossiers à surveiller pour le rechargement
+        host="127.0.0.1",  # Accessible depuis le réseau local (téléphone, etc.)
+        port=5500
+        ,  # Port standard pour le développement
+        reload=False,
+
         log_level="info",  # Niveau de logging
     )

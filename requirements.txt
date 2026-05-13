@@ -1,5 +1,5 @@
 # Framework web
-fastapi>=0.109.0
+fastapi==0.115.12
 
 # Serveur ASGI
 uvicorn[standard]>=0.27.0
