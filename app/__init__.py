@@ -1,5 +1,5 @@
 """
-Package principal de l'application Spass_gasy
+Package principal de l'application TM_Location
 Application de location de voitures
 
 Ce package contient :

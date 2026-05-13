@@ -1,5 +1,5 @@
 """
-Point d'entrée de l'application Spass Gasy.
+Point d'entrée de l'application TM_Location.
 
 Ce fichier configure :
 - L'application FastAPI
@@ -31,12 +31,12 @@ async def lifespan(app: FastAPI):
     'async with' et 'yield' : tout ce qui est AVANT yield s'exécute au démarrage,
     tout ce qui est APRÈS yield s'exécute à l'arrêt.
     """
-    print("Démarrage de Spass Gasy...")
+    print("Démarrage de TM_Location...")
     await init_db()
     await seed_initial_data()
     print("Application prête !")
     yield
-    print("Arrêt de Spass Gasy...")
+    print("Arrêt de TM_Location...")
     await engine.dispose()
 
 
@@ -77,7 +77,7 @@ async def seed_initial_data():
 
 
 app = FastAPI(
-    title="Spass Gasy",
+    title="TM_Location",
     description="Application de location de voitures à Madagascar.",
     version="0.1.0",
     lifespan=lifespan,
