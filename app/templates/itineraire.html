@@ -12,13 +12,15 @@
         z-index: 1;
     }
     .map-wrapper {
-        position: relative;
-        height: 420px;
+        height: 55vh;
         border-radius: 1rem;
-        /* PAS de overflow:hidden — bloque les touch events sur iOS */
     }
-    @media (max-width: 1024px) {
-        .map-wrapper { height: 70vh; }
+    @media (min-width: 1024px) {
+        .map-wrapper {
+            position: sticky;
+            top: 88px;
+            height: calc(100vh - 108px);
+        }
     }
 
     /* Bannière flottante fixée en bas d'écran (hors de la carte) */
@@ -85,6 +87,27 @@
 
     /* Curseur croix quand mode pointage actif */
     #map.picking-mode { cursor: crosshair !important; }
+
+
+    /* Bouton localiser */
+    .locate-btn {
+        width: 34px !important;
+        height: 34px !important;
+        background: white !important;
+        border: none !important;
+        border-radius: 4px !important;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.4) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        margin-bottom: 8px !important;
+    }
+    .locate-btn svg {
+        width: 18px;
+        height: 18px;
+        fill: #4f46e5;
+    }
 </style>
 
 <!-- Bannière flottante mode pointage (hors carte, pas d'interférence touch) -->
@@ -103,10 +126,10 @@
         <a href="/cars/{{ car.id }}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">&larr; Retour</a>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
         <!-- ── Formulaire ── -->
-        <div class="lg:col-span-1 space-y-4" id="form-panel">
+        <div class="lg:col-span-1 space-y-4 order-1 lg:order-none" id="form-panel">
             <div class="bg-white p-5 rounded-2xl shadow-md border border-gray-100">
                 <h3 class="text-base font-bold text-gray-800 mb-4">🗺️ Définir l'itinéraire</h3>
 
@@ -196,7 +219,7 @@
         </div>
 
         <!-- ── Carte ── -->
-        <div class="lg:col-span-2" id="map-col">
+        <div class="lg:col-span-2 order-2 lg:order-none" id="map-col">
             <div id="map-wrapper" class="bg-white p-2 rounded-2xl shadow-md border border-gray-100 map-wrapper">
                 <div id="map"></div>
                 <!-- Loader calcul itinéraire -->
@@ -228,12 +251,52 @@
 </template>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.css" />
+<script src="https://unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.js"></script>
 <script>
 (function () {
     var DAILY_PRICE = {{ car.daily_price }};
+    var NAV_HEIGHT = 88;
+
+    function scrollTo(el, offset) {
+        var top = el.getBoundingClientRect().top + window.scrollY - (offset || NAV_HEIGHT);
+        window.scrollTo({ top: top, behavior: 'smooth' });
+    }
 
     // ── Carte ──
-    var map = L.map('map', { tap: true, tapTolerance: 15 }).setView([-18.91, 47.52], 13);
+    var map = L.map('map', {
+        gestureHandling: true,
+        gestureHandlingOptions: {
+            text: {
+                touch: 'Utilisez deux doigts pour déplacer la carte',
+                scroll: 'Utilisez Ctrl + molette pour zoomer',
+                scrollMac: 'Utilisez ⌘ + molette pour zoomer'
+            },
+            duration: 1000
+        },
+        zoomControl: false,
+        tap: true,
+        tapTolerance: 15
+    }).setView([-18.91, 47.52], 13);
+
+    // Contrôles zoom en bas à droite (plus ergonomiques sur mobile)
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // Bouton "Me localiser"
+    var LocateControl = L.Control.extend({
+        options: { position: 'bottomright' },
+        onAdd: function () {
+            var btn = L.DomUtil.create('button', 'locate-btn');
+            btn.title = 'Ma position';
+            btn.innerHTML = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7zm0 4.5A2.5 2.5 0 1 0 12 11.5 2.5 2.5 0 0 0 12 6.5z"/></svg>';
+            L.DomEvent.on(btn, 'click', function (e) {
+                L.DomEvent.stopPropagation(e);
+                map.locate({ setView: true, maxZoom: 15 });
+            });
+            return btn;
+        }
+    });
+    new LocateControl().addTo(map);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
@@ -276,7 +339,7 @@
         });
         showBanner(target);
         if (window.innerWidth < 1024) {
-            document.getElementById('map-col').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            scrollTo(document.getElementById('map-col'));
         }
     }
 
@@ -351,7 +414,7 @@
         if (navigator.vibrate) navigator.vibrate(40);
         if (window.innerWidth < 1024) {
             setTimeout(function () {
-                document.getElementById('form-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                scrollTo(document.getElementById('form-panel'));
             }, 400);
         }
 
@@ -426,7 +489,7 @@
         var card = document.getElementById('results-card');
         card.style.display = 'block';
         if (window.innerWidth < 1024) {
-            setTimeout(function () { card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
+            setTimeout(function () { scrollTo(card); }, 200);
         }
     }
 
@@ -523,36 +586,8 @@
         }
     });
 
-    // ── Scroll : carte par-dessus le navbar ──
-    var mapCol = document.getElementById('map-col');
-    var mapWrapper = document.getElementById('map-wrapper');
-    var placeholder = document.createElement('div');
-    var isFixed = false;
-
-    window.addEventListener('scroll', function () {
-        var rect = mapCol.getBoundingClientRect();
-        var colWidth = mapCol.offsetWidth;
-        if (!isFixed && rect.top <= 0) {
-            placeholder.style.height = mapWrapper.offsetHeight + 'px';
-            mapCol.insertBefore(placeholder, mapWrapper);
-            mapWrapper.style.position = 'fixed';
-            mapWrapper.style.top = '0';
-            mapWrapper.style.width = colWidth + 'px';
-            mapWrapper.style.zIndex = '100';
-            mapWrapper.style.borderRadius = '0';
-            isFixed = true;
-            setTimeout(function () { map.invalidateSize(); }, 50);
-        } else if (isFixed && rect.top > 0) {
-            mapWrapper.style.position = '';
-            mapWrapper.style.top = '';
-            mapWrapper.style.width = '';
-            mapWrapper.style.zIndex = '';
-            mapWrapper.style.borderRadius = '';
-            if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
-            isFixed = false;
-            setTimeout(function () { map.invalidateSize(); }, 50);
-        }
-    });
+    // Forcer Leaflet à recalculer la taille après le rendu
+    setTimeout(function () { map.invalidateSize(); }, 200);
 
 })();
 </script>
